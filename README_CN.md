@@ -4,7 +4,6 @@
 
 ## 项目简介
 
-
 Antigravity-Manager 是一个专业的 AI 账号管理与协议反代系统。本项目在官方 Docker 镜像（`lbjlaq/antigravity-manager:latest`）的基础上，增加了通过 Tun 模式和 Clash 实现的透明代理支持，并支持订阅节点功能。
 
 ## 项目结构
