@@ -1,0 +1,96 @@
+# Clash 配置文件
+# Tun 模式配置，支持订阅节点
+
+# 端口配置
+port: 7890
+socks-port: 7891
+allow-lan: true
+mode: rule
+log-level: info
+external-controller: 0.0.0.0:9090
+secret: ""
+
+# Tun 模式配置
+tun:
+  enable: true
+  device: tun0
+  stack: system
+  dns-hijack:
+    - any:53
+  auto-route: true
+  auto-detect-interface: true
+
+# DNS 配置
+dns:
+  enable: true
+  listen: 0.0.0.0:53
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  nameserver:
+    - 8.8.8.8
+    - 8.8.4.4
+  fallback:
+    - 1.1.1.1
+    - 1.0.0.1
+
+# 代理提供者（订阅节点配置）
+proxy-providers:
+  # 订阅节点示例 - 请替换为实际的订阅地址
+  subscription:
+    type: http
+    url: "https://your-subscription-url.com"  # 替换为您的订阅地址
+    interval: 3600  # 每小时更新一次
+    path: ./providers/subscription.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: http://www.gstatic.com/generate_204
+
+# 代理配置（手动配置的代理）
+proxies:
+  # 示例代理配置（如果使用订阅，可以删除此部分）
+  # - name: "Proxy1"
+  #   type: http
+  #   server: your-proxy-server.com
+  #   port: 8080
+  #   username: your-username
+  #   password: your-password
+
+# 代理组
+proxy-groups:
+  # 手动选择代理组
+  - name: "PROXY"
+    type: select
+    proxies:
+      - DIRECT
+      - Auto
+      # 订阅节点会自动添加到这里
+
+  # 自动选择最快节点
+  - name: "Auto"
+    type: url-test
+    use:
+      - subscription  # 使用订阅节点
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+
+  # 全局代理组
+  - name: "GLOBAL"
+    type: select
+    proxies:
+      - PROXY
+      - DIRECT
+
+# 规则配置
+rules:
+  # 直连中国大陆 IP
+  - GEOIP,CN,DIRECT
+
+  # 直连局域网
+  - IP-CIDR,192.168.0.0/16,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  - IP-CIDR,127.0.0.0/8,DIRECT
+
+  # 其他流量走代理
+  - MATCH,PROXY
