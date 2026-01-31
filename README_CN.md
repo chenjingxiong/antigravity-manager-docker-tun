@@ -1,39 +1,32 @@
-# Antigravity-Manager Docker + Tun 模式 + Clash 代理
+# Antigravity-Manager + Clash + mihomo
 
-本项目使用 Docker 基于 Antigravity-Manager 官方镜像构建，并通过 Tun 模式连接到 Clash 代理，支持订阅节点功能。
+本项目使用 Docker Compose 部署 Antigravity-Manager、Clash 代理和 mihomo Web UI，支持订阅节点功能。
 
 ## 项目简介
 
-Antigravity-Manager 是一个专业的 AI 账号管理与协议反代系统。本项目在官方 Docker 镜像（`lbjlaq/antigravity-manager:latest`）的基础上，增加了通过 Tun 模式和 Clash 实现的透明代理支持，并支持订阅节点功能。
+Antigravity-Manager 是一个专业的 AI 账号管理与协议反代系统。本项目使用官方 Docker 镜像部署，集成 Clash 代理（支持 TUN 模式和订阅节点），并使用 mihomo 作为 Web 管理界面。
 
 ## 项目结构
 
 ```
 .
-├── Dockerfile                      # Docker 镜像构建文件（基于官方镜像）
 ├── docker-compose.yml              # Docker Compose 配置
 ├── Makefile                        # 常用命令快捷方式
 ├── .env.example                    # 环境变量示例
 ├── .gitignore                      # Git 忽略文件
 ├── README.md                       # 英文文档
 ├── README_CN.md                    # 中文文档
-├── .github/
-│   └── workflows/
-│       └── docker.yml             # GitHub Actions 自动构建工作流
-├── config/
-│   └── clash/
-│       └── config.yaml            # Clash 配置文件（支持订阅）
-└── scripts/
-    ├── setup-tun.sh               # Tun 模式网络配置脚本
-    └── start.sh                   # 容器启动脚本
+└── config/
+    └── clash/
+        └── config.yaml            # Clash 配置文件（支持订阅）
 ```
 
 ## 功能特性
 
-- ✅ 基于 Antigravity-Manager 官方镜像 `lbjlaq/antigravity-manager:latest`
-- ✅ GitHub Actions 自动构建（支持多架构）
+- ✅ 使用 Antigravity-Manager 官方镜像 `lbjlaq/antigravity-manager:latest`
 - ✅ 集成 Clash 代理（支持 TUN 模式）
 - ✅ 订阅节点支持（自动更新节点列表）
+- ✅ mihomo Web UI（acd）可视化管理
 - ✅ Tun 模式透明代理
 - ✅ 自动路由配置
 - ✅ DNS 劫持
@@ -74,49 +67,49 @@ Antigravity-Manager 是一个专业的 AI 账号管理与协议反代系统。�
 
 ## 快速开始
 
-### 方法一：使用 Docker Compose（推荐）
+### 1. 克隆项目
 
 ```bash
-# 1. 克隆项目
 git clone <repository-url>
 cd Antigravity-Manager-Docker-Tun
-
-# 2. 配置 Clash 订阅地址
-# 编辑 config/clash/config.yaml 文件，修改订阅地址
-# 将 "https://your-subscription-url.com" 替换为您的实际订阅地址
-
-# 3. 配置环境变量
-# 编辑 docker-compose.yml，设置 API_KEY 和 WEB_PASSWORD
-
-# 4. 构建并启动
-docker-compose build
-docker-compose up -d
-
-# 5. 查看日志
-docker-compose logs -f
 ```
 
-### 方法二：使用 Makefile
+### 2. 配置 Clash 订阅地址
+
+编辑 [`config/clash/config.yaml`](config/clash/config.yaml) 文件，修改订阅地址：
+
+```yaml
+proxy-providers:
+  subscription:
+    type: http
+    url: "https://your-subscription-url.com"  # 替换为您的订阅地址
+    interval: 3600  # 每小时更新一次
+    path: ./providers/subscription.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: http://www.gstatic.com/generate_204
+```
+
+### 3. 配置环境变量
+
+编辑 [`docker-compose.yml`](docker-compose.yml:17)，设置 API_KEY 和 WEB_PASSWORD：
+
+```yaml
+environment:
+  - LOG_LEVEL=info
+  - API_KEY=your-secret-key  # [重要] 请设置您的安全密钥
+  - WEB_PASSWORD=your-login-password  # 可选，Web UI 登录密码
+```
+
+### 4. 启动服务
 
 ```bash
-# 1. 克隆项目
-git clone <repository-url>
-cd Antigravity-Manager-Docker-Tun
+# 启动所有服务
+docker-compose up -d
 
-# 2. 配置 Clash 订阅地址
-# 编辑 config/clash/config.yaml 文件
-
-# 3. 配置环境变量
-# 编辑 docker-compose.yml
-
-# 4. 构建镜像
-make build
-
-# 5. 启动容器
-make up
-
-# 6. 查看日志
-make logs
+# 查看日志
+docker-compose logs -f
 ```
 
 ## 配置说明
@@ -125,7 +118,7 @@ make logs
 
 #### 订阅节点配置
 
-编辑 `config/clash/config.yaml` 文件，配置订阅地址：
+编辑 [`config/clash/config.yaml`](config/clash/config.yaml) 文件，配置订阅地址：
 
 ```yaml
 proxy-providers:
@@ -184,56 +177,32 @@ Antigravity-Manager 使用环境变量进行配置：
 
 ## 端口说明
 
-| 端口 | 用途 | 说明 |
+| 端口 | 服务 | 说明 |
 |------|------|------|
 | 8045 | Antigravity-Manager | 管理界面和 API Base |
-| 7890 | HTTP 代理 | Clash HTTP 代理端口 |
-| 7891 | SOCKS5 代理 | Clash SOCKS5 代理端口 |
-| 9090 | 控制面板 | Clash Web 控制面板 |
+| 7890 | Clash HTTP 代理 | Clash HTTP 代理端口 |
+| 7891 | Clash SOCKS5 代理 | Clash SOCKS5 代理端口 |
+| 9090 | Clash 控制面板 | Clash RESTful API 端口 |
+| 8080 | mihomo Web UI | mihomo Web 管理界面 |
 
-## GitHub Actions 自动构建
+## 访问服务
 
-本项目配置了 GitHub Actions 工作流，支持自动构建和发布 Docker 镜像。
+启动服务后，可以通过以下地址访问：
 
-### 触发条件
+- **Antigravity-Manager**: http://localhost:8045
+- **mihomo Web UI**: http://localhost:8080
+- **Clash 控制面板**: http://localhost:9090 (通过 mihomo 访问)
 
-- 推送到 `main` 或 `master` 分支
-- 创建标签（如 `v1.0.0`）
-- 针对 `main` 或 `master` 分支的 Pull Request
-- 手动触发（在 GitHub Actions 页面）
+### 使用 mihomo 配置代理
 
-### 构建特性
-
-- ✅ 多架构支持（linux/amd64, linux/arm64）
-- ✅ 自动推送到 GitHub Container Registry (ghcr.io)
-- ✅ 自动标签管理（分支名、版本号、latest）
-- ✅ 构建缓存加速
-- ✅ 构建摘要生成
-
-### 使用预构建镜像
-
-如果不想自己构建，可以直接使用 GitHub Actions 构建的镜像：
-
-```bash
-# 使用预构建镜像
-docker pull your-username/antigravity-manager-docker-tun:latest
-
-# 修改 docker-compose.yml 中的镜像地址
-# image: your-username/antigravity-manager-docker-tun:latest
-```
-
-### 配置 Docker Hub 凭证
-
-在 GitHub 仓库设置中添加以下 Secrets：
-
-1. 进入仓库的 Settings → Secrets and variables → Actions
-2. 添加以下 Secrets：
-   - `DOCKER_USERNAME`: Docker Hub 用户名
-   - `DOCKER_PASSWORD`: Docker Hub 访问令牌（在 Docker Hub → Account Settings → Security → New Access Token 创建）
-
-### 构建状态
-
-查看 [GitHub Actions](../../actions) 页面了解构建状态和历史记录。
+1. 访问 http://localhost:8080
+2. 点击"连接"按钮，连接到 Clash（默认地址：`http://clash:9090`）
+3. 在 mihomo 中可以：
+   - 查看订阅节点
+   - 测试节点延迟
+   - 切换代理节点
+   - 查看流量统计
+   - 管理代理规则
 
 ## 常用命令
 
@@ -242,9 +211,6 @@ docker pull your-username/antigravity-manager-docker-tun:latest
 ```bash
 # 查看所有命令
 make help
-
-# 构建镜像
-make build
 
 # 启动容器
 make up
@@ -284,13 +250,10 @@ docker-compose restart
 docker-compose logs -f
 
 # 进入容器
-docker-compose exec antigravity-clash bash
+docker-compose exec antigravity-manager bash
 
 # 查看容器状态
 docker-compose ps
-
-# 重新构建镜像
-docker-compose build --no-cache
 ```
 
 ## 验证服务
@@ -311,9 +274,9 @@ curl -x http://localhost:7890 https://www.google.com
 
 浏览器打开: http://localhost:8045
 
-### 4. 访问 Clash 控制面板
+### 4. 访问 mihomo Web UI
 
-浏览器打开: http://localhost:9090
+浏览器打开: http://localhost:8080
 
 ## 使用示例
 
@@ -331,7 +294,7 @@ claude
 
 1.  **协议选择**: 建议优先使用 **Gemini 协议**。
 2.  **Base URL**: 填写 `http://127.0.0.1:8045`。
-3.  **注意**: 
+3.  **注意**:
     -   **OpenAI 协议限制**: Kilo Code 在使用 OpenAI 模式时，其请求路径会叠加产生 `/v1/chat/completions/responses` 这种非标准路径，导致 Antigravity 返回 404。因此请务必填入 Base URL 后选择 Gemini 模式。
     -   **模型映射**: Kilo Code 中的模型名称可能与 Antigravity 默认设置不一致，如遇到无法连接，请在"模型映射"页面设置自定义映射，并查看**日志文件**进行调试。
 
@@ -387,7 +350,7 @@ with open("output.png", "wb") as f:
 
 ```bash
 # 检查 Tun 设备
-docker-compose exec antigravity-clash ls -l /dev/net/tun
+docker-compose exec clash ls -l /dev/net/tun
 
 # 如果不存在，检查主机 Tun 设备
 ls -l /dev/net/tun
@@ -397,10 +360,10 @@ ls -l /dev/net/tun
 
 ```bash
 # 查看 Clash 日志
-docker-compose exec antigravity-clash cat /var/log/clash/clash.log
+docker-compose logs clash
 
 # 检查配置文件
-docker-compose exec antigravity-clash clash -t -d /etc/clash
+docker-compose exec clash clash -t -d /root/.config/clash
 ```
 
 ### 订阅节点无法更新
@@ -410,20 +373,26 @@ docker-compose exec antigravity-clash clash -t -d /etc/clash
 curl -I https://your-subscription-url.com
 
 # 查看 Clash 日志中的订阅更新信息
-docker-compose logs -f antigravity-clash | grep subscription
+docker-compose logs -f clash | grep subscription
 ```
+
+### mihomo 无法连接 Clash
+
+1. 检查 Clash 容器是否正常运行：`docker-compose ps`
+2. 检查 Clash 控制面板端口是否开放：`docker-compose logs clash`
+3. 在 mihomo 中确认 Clash 地址：`http://clash:9090`
 
 ### 网络问题
 
 ```bash
 # 检查 iptables 规则
-docker-compose exec antigravity-clash iptables -t nat -L -n
+docker-compose exec clash iptables -t nat -L -n
 
 # 检查路由
-docker-compose exec antigravity-clash ip route
+docker-compose exec clash ip route
 
 # 测试网络连接
-docker-compose exec antigravity-clash ping -c 4 8.8.8.8
+docker-compose exec clash ping -c 4 8.8.8.8
 ```
 
 ### 代理连接失败
@@ -451,6 +420,10 @@ curl -x http://localhost:7890 https://www.google.com
 1. **自动更新**: Clash 定期从订阅地址获取节点列表
 2. **健康检查**: 定期测试节点可用性
 3. **自动选择**: 根据延迟自动选择最优节点
+
+### mihomo 原理
+
+mihomo 是一个基于 React 的 Clash Web UI，通过 Clash RESTful API 管理代理配置和状态。
 
 ### 流量流程
 
@@ -480,19 +453,19 @@ curl -x http://localhost:7890 https://www.google.com
 
 ### 自定义规则
 
-编辑 `config/clash/config.yaml` 的 `rules` 部分：
+编辑 [`config/clash/config.yaml`](config/clash/config.yaml) 的 `rules` 部分：
 
 ```yaml
 rules:
   # 直连中国大陆 IP
   - GEOIP,CN,DIRECT
-  
+
   # 直连局域网
   - IP-CIDR,192.168.0.0/16,DIRECT
-  
+
   # 特定域名走代理
   - DOMAIN-SUFFIX,google.com,PROXY
-  
+
   # 其他流量走代理
   - MATCH,PROXY
 ```
@@ -506,7 +479,7 @@ proxy-providers:
     url: "https://subscription1-url.com"
     interval: 3600
     path: ./providers/subscription1.yaml
-    
+
   subscription2:
     type: http
     url: "https://subscription2-url.com"
@@ -535,7 +508,7 @@ A: Tun 模式仅支持 Linux。在 Windows 上可以使用 WSL2 或使用普通�
 
 ### Q: 如何查看代理流量？
 
-A: 访问 Clash 控制面板 http://localhost:9090，可以查看实时连接和流量统计。
+A: 访问 mihomo Web UI http://localhost:8080，可以查看实时连接和流量统计。
 
 ### Q: 容器重启后数据会丢失吗？
 
@@ -543,7 +516,11 @@ A: 不会。配置和数据目录已挂载到宿主机，重启容器不会丢�
 
 ### Q: 订阅节点多久更新一次？
 
-A: 默认每小时更新一次（3600 秒），可以在 `config/clash/config.yaml` 中调整 `interval` 参数。
+A: 默认每小时更新一次（3600 秒），可以在 [`config/clash/config.yaml`](config/clash/config.yaml:24) 中调整 `interval` 参数。
+
+### Q: mihomo 和 Clash 控制面板有什么区别？
+
+A: mihomo 是一个更友好的 Web UI，提供可视化的代理管理界面。Clash 控制面板是官方的 RESTful API 端口，mihomo 通过该端口与 Clash 通信。
 
 ## 许可证
 

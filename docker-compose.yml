@@ -1,12 +1,26 @@
 version: '3.8'
 
 services:
-  antigravity-clash:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: antigravity-clash
-    hostname: antigravity-clash
+  # Antigravity-Manager 服务
+  antigravity-manager:
+    image: lbjlaq/antigravity-manager:latest
+    container_name: antigravity-manager
+    ports:
+      - "8045:8045"
+    volumes:
+      - ~/.antigravity_tools:/root/.antigravity_tools
+    environment:
+      - LOG_LEVEL=info
+      - API_KEY=your-secret-key  # [重要] 请设置您的安全密钥
+      - WEB_PASSWORD=your-login-password  # 可选，Web UI 登录密码
+    restart: unless-stopped
+    networks:
+      - antigravity-net
+
+  # Clash 服务
+  clash:
+    image: dreamacro/clash:latest
+    container_name: clash
     privileged: true
     network_mode: bridge
     cap_add:
@@ -16,39 +30,36 @@ services:
       - /dev/net/tun:/dev/net/tun
     volumes:
       # Clash 配置文件挂载
-      - ./config/clash:/etc/clash
-      # Antigravity-Manager 数据持久化
-      - ~/.antigravity_tools:/root/.antigravity_tools
+      - ./config/clash:/root/.config/clash
       # 日志目录
-      - ./logs:/var/log
+      - ./logs/clash:/var/log/clash
     ports:
-      # Antigravity-Manager 服务端口
-      - "8045:8045"
       # Clash HTTP 代理端口
       - "7890:7890"
       # Clash SOCKS5 代理端口
       - "7891:7891"
       # Clash 控制面板端口
       - "9090:9090"
-    environment:
-      # 时区设置
-      - TZ=Asia/Shanghai
-      # Antigravity-Manager 配置
-      - PORT=8045
-      - LOG_LEVEL=info
-      # API Key（必填，用于 AI 请求鉴权）
-      - API_KEY=your-secret-key
-      # Web 管理密码（可选，用于 Web UI 登录）
-      - WEB_PASSWORD=your-login-password
-      # Clash 订阅地址（可选，用于自动更新节点）
-      - CLASH_SUBSCRIPTION_URL=
     restart: unless-stopped
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8045/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    networks:
+      - antigravity-net
+
+  # mihomo (acd) - Clash Web UI
+  mihomo:
+    image: ghcr.io/mihomo/amd64:latest
+    container_name: mihomo
+    ports:
+      - "8080:80"
+    volumes:
+      - ./config/clash:/root/.config/clash:ro
+    environment:
+      - CLASH_URL=http://clash:9090
+    restart: unless-stopped
+    depends_on:
+      - clash
+    networks:
+      - antigravity-net
+
+networks:
+  antigravity-net:
+    driver: bridge

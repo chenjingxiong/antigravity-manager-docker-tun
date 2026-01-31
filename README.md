@@ -1,39 +1,32 @@
-# Antigravity-Manager Docker + Tun Mode + Clash Proxy
+# Antigravity-Manager + Clash + mihomo
 
-This project builds Antigravity-Manager using Docker based on the official image `lbjlaq/antigravity-manager:latest`, and connects the Docker network through Tun mode using Clash proxy with subscription support.
+This project deploys Antigravity-Manager, Clash proxy, and mihomo Web UI using Docker Compose, with subscription node support.
 
 ## Project Overview
 
-Antigravity-Manager is a professional AI account management and protocol reverse proxy system. This Docker deployment is based on the official Antigravity-Manager image, adding transparent proxy support via Tun mode and Clash, with subscription node support.
+Antigravity-Manager is a professional AI account management and protocol reverse proxy system. This project uses the official Docker image, integrates Clash proxy (with TUN mode and subscription support), and uses mihomo as the Web management interface.
 
 ## Project Structure
 
 ```
 .
-├── Dockerfile                      # Docker image build file (based on official image)
 ├── docker-compose.yml              # Docker Compose configuration
 ├── Makefile                        # Command shortcuts
 ├── .env.example                    # Environment variables example
 ├── .gitignore                      # Git ignore file
 ├── README.md                       # English documentation
 ├── README_CN.md                    # Chinese documentation
-├── .github/
-│   └── workflows/
-│       └── docker.yml             # GitHub Actions auto-build workflow
-├── config/
-│   └── clash/
-│       └── config.yaml            # Clash configuration file (with subscription support)
-└── scripts/
-    ├── setup-tun.sh               # Tun mode network setup script
-    └── start.sh                   # Container startup script
+└── config/
+    └── clash/
+        └── config.yaml            # Clash configuration file (with subscription support)
 ```
 
 ## Features
 
-- ✅ Based on Antigravity-Manager official image `lbjlaq/antigravity-manager:latest`
-- ✅ GitHub Actions auto-build (multi-architecture support)
+- ✅ Uses Antigravity-Manager official image `lbjlaq/antigravity-manager:latest`
 - ✅ Integrated Clash proxy (with TUN mode support)
 - ✅ Subscription node support (automatic node list updates)
+- ✅ mihomo Web UI (acd) for visual management
 - ✅ Tun mode transparent proxy
 - ✅ Auto route configuration
 - ✅ DNS hijacking
@@ -74,49 +67,49 @@ Antigravity-Manager is a professional AI account management and protocol reverse
 
 ## Quick Start
 
-### Method 1: Using Docker Compose (Recommended)
+### 1. Clone the Project
 
 ```bash
-# 1. Clone the project
 git clone <repository-url>
 cd Antigravity-Manager-Docker-Tun
-
-# 2. Configure Clash subscription URL
-# Edit config/clash/config.yaml file, modify the subscription URL
-# Replace "https://your-subscription-url.com" with your actual subscription URL
-
-# 3. Configure environment variables
-# Edit docker-compose.yml, set API_KEY and WEB_PASSWORD
-
-# 4. Build and start
-docker-compose build
-docker-compose up -d
-
-# 5. View logs
-docker-compose logs -f
 ```
 
-### Method 2: Using Makefile
+### 2. Configure Clash Subscription URL
+
+Edit [`config/clash/config.yaml`](config/clash/config.yaml) file, modify the subscription URL:
+
+```yaml
+proxy-providers:
+  subscription:
+    type: http
+    url: "https://your-subscription-url.com"  # Replace with your subscription URL
+    interval: 3600  # Update every hour
+    path: ./providers/subscription.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: http://www.gstatic.com/generate_204
+```
+
+### 3. Configure Environment Variables
+
+Edit [`docker-compose.yml`](docker-compose.yml:17), set API_KEY and WEB_PASSWORD:
+
+```yaml
+environment:
+  - LOG_LEVEL=info
+  - API_KEY=your-secret-key  # [Important] Please set your security key
+  - WEB_PASSWORD=your-login-password  # Optional, Web UI login password
+```
+
+### 4. Start Services
 
 ```bash
-# 1. Clone the project
-git clone <repository-url>
-cd Antigravity-Manager-Docker-Tun
+# Start all services
+docker-compose up -d
 
-# 2. Configure Clash subscription URL
-# Edit config/clash/config.yaml file
-
-# 3. Configure environment variables
-# Edit docker-compose.yml
-
-# 4. Build image
-make build
-
-# 5. Start container
-make up
-
-# 6. View logs
-make logs
+# View logs
+docker-compose logs -f
 ```
 
 ## Configuration
@@ -125,7 +118,7 @@ make logs
 
 #### Subscription Node Configuration
 
-Edit `config/clash/config.yaml` file, configure subscription URL:
+Edit [`config/clash/config.yaml`](config/clash/config.yaml) file, configure subscription URL:
 
 ```yaml
 proxy-providers:
@@ -175,56 +168,32 @@ Antigravity-Manager uses environment variables for configuration:
 
 ## Port Mapping
 
-| Port | Usage | Description |
+| Port | Service | Description |
 |------|--------|-------------|
 | 8045 | Antigravity-Manager | Management UI and API Base |
-| 7890 | HTTP Proxy | Clash HTTP proxy port |
-| 7891 | SOCKS5 Proxy | Clash SOCKS5 proxy port |
-| 9090 | Control Panel | Clash Web control panel |
+| 7890 | Clash HTTP Proxy | Clash HTTP proxy port |
+| 7891 | Clash SOCKS5 Proxy | Clash SOCKS5 proxy port |
+| 9090 | Clash Control Panel | Clash RESTful API port |
+| 8080 | mihomo Web UI | mihomo Web management interface |
 
-## GitHub Actions Auto-Build
+## Access Services
 
-This project is configured with GitHub Actions workflow for automatic Docker image building and publishing.
+After starting services, you can access:
 
-### Trigger Conditions
+- **Antigravity-Manager**: http://localhost:8045
+- **mihomo Web UI**: http://localhost:8080
+- **Clash Control Panel**: http://localhost:9090 (accessed via mihomo)
 
-- Push to `main` or `master` branch
-- Create tags (e.g., `v1.0.0`)
-- Pull requests targeting `main` or `master` branch
-- Manual trigger (via GitHub Actions page)
+### Using mihomo to Configure Proxy
 
-### Build Features
-
-- ✅ Multi-architecture support (linux/amd64, linux/arm64)
-- ✅ Automatic push to GitHub Container Registry (ghcr.io)
-- ✅ Automatic tag management (branch name, version, latest)
-- ✅ Build cache acceleration
-- ✅ Build summary generation
-
-### Using Pre-built Images
-
-If you don't want to build yourself, you can use the GitHub Actions built image:
-
-```bash
-# Use pre-built image
-docker pull your-username/antigravity-manager-docker-tun:latest
-
-# Update image address in docker-compose.yml
-# image: your-username/antigravity-manager-docker-tun:latest
-```
-
-### Configure Docker Hub Credentials
-
-Add the following Secrets in your GitHub repository settings:
-
-1. Go to repository Settings → Secrets and variables → Actions
-2. Add the following Secrets:
-   - `DOCKER_USERNAME`: Docker Hub username
-   - `DOCKER_PASSWORD`: Docker Hub access token (create at Docker Hub → Account Settings → Security → New Access Token)
-
-### Build Status
-
-Check the [GitHub Actions](../../actions) page for build status and history.
+1. Visit http://localhost:8080
+2. Click "Connect" button to connect to Clash (default address: `http://clash:9090`)
+3. In mihomo, you can:
+   - View subscription nodes
+   - Test node latency
+   - Switch proxy nodes
+   - View traffic statistics
+   - Manage proxy rules
 
 ## Common Commands
 
@@ -234,16 +203,13 @@ Check the [GitHub Actions](../../actions) page for build status and history.
 # View all commands
 make help
 
-# Build image
-make build
-
-# Start container
+# Start containers
 make up
 
-# Stop container
+# Stop containers
 make down
 
-# Restart container
+# Restart containers
 make restart
 
 # View logs
@@ -262,26 +228,23 @@ make clean
 ### Using Docker Compose
 
 ```bash
-# Start container
+# Start containers
 docker-compose up -d
 
-# Stop container
+# Stop containers
 docker-compose down
 
-# Restart container
+# Restart containers
 docker-compose restart
 
 # View logs
 docker-compose logs -f
 
 # Enter container
-docker-compose exec antigravity-clash bash
+docker-compose exec antigravity-manager bash
 
 # View container status
 docker-compose ps
-
-# Rebuild image
-docker-compose build --no-cache
 ```
 
 ## Verify Service
@@ -302,9 +265,75 @@ curl -x http://localhost:7890 https://www.google.com
 
 Browser open: http://localhost:8045
 
-### 4. Access Clash Control Panel
+### 4. Access mihomo Web UI
 
-Browser open: http://localhost:9090
+Browser open: http://localhost:8080
+
+## Usage Examples
+
+### How to use with Claude Code CLI?
+
+1. Start Antigravity-Manager and enable service in "API Proxy" page.
+2. Run in terminal:
+```bash
+export ANTHROPIC_API_KEY="sk-antigravity"
+export ANTHROPIC_BASE_URL="http://127.0.0.1:8045"
+claude
+```
+
+### How to use with Kilo Code?
+
+1. **Protocol Selection**: Recommend using **Gemini protocol**.
+2. **Base URL**: Fill in `http://127.0.0.1:8045`.
+3. **Note**:
+    - **OpenAI Protocol Limitation**: When Kilo Code uses OpenAI mode, its request path will stack to produce non-standard paths like `/v1/chat/completions/responses`, causing Antigravity to return 404. Therefore, please select Gemini mode after filling in Base URL.
+    - **Model Mapping**: Model names in Kilo Code may not match Antigravity default settings. If you encounter connection issues, please set custom mappings in "Model Mapping" page and check **log files** for debugging.
+
+### How to use in Python?
+
+```python
+import openai
+
+client = openai.OpenAI(
+    api_key="sk-antigravity",
+    base_url="http://127.0.0.1:8045/v1"
+)
+
+response = client.chat.completions.create(
+    model="gemini-3-flash",
+    messages=[{"role": "user", "content": "Hello, please introduce yourself"}]
+)
+print(response.choices[0].message.content)
+```
+
+### How to use Image Generation (Imagen 3)?
+
+#### Method 1: OpenAI Images API (Recommended)
+
+```python
+import openai
+
+client = openai.OpenAI(
+    api_key="sk-antigravity",
+    base_url="http://127.0.0.1:8045/v1"
+)
+
+# Generate image
+response = client.images.generate(
+    model="gemini-3-pro-image",
+    prompt="A futuristic city, cyberpunk, neon lights",
+    size="1920x1080",      # Supports arbitrary WIDTHxHEIGHT format, automatically calculates aspect ratio
+    quality="hd",          # "standard" | "hd" | "medium"
+    n=1,
+    response_format="b64_json"
+)
+
+# Save image
+import base64
+image_data = base64.b64decode(response.data[0].b64_json)
+with open("output.png", "wb") as f:
+    f.write(image_data)
+```
 
 ## Troubleshooting
 
@@ -312,7 +341,7 @@ Browser open: http://localhost:9090
 
 ```bash
 # Check Tun device
-docker-compose exec antigravity-clash ls -l /dev/net/tun
+docker-compose exec clash ls -l /dev/net/tun
 
 # If not exists, check host Tun device
 ls -l /dev/net/tun
@@ -322,10 +351,10 @@ ls -l /dev/net/tun
 
 ```bash
 # View Clash logs
-docker-compose exec antigravity-clash cat /var/log/clash/clash.log
+docker-compose logs clash
 
 # Check configuration file
-docker-compose exec antigravity-clash clash -t -d /etc/clash
+docker-compose exec clash clash -t -d /root/.config/clash
 ```
 
 ### Subscription Node Cannot Update
@@ -335,20 +364,26 @@ docker-compose exec antigravity-clash clash -t -d /etc/clash
 curl -I https://your-subscription-url.com
 
 # View subscription update information in Clash logs
-docker-compose logs -f antigravity-clash | grep subscription
+docker-compose logs -f clash | grep subscription
 ```
+
+### mihomo Cannot Connect to Clash
+
+1. Check if Clash container is running: `docker-compose ps`
+2. Check if Clash control panel port is open: `docker-compose logs clash`
+3. Confirm Clash address in mihomo: `http://clash:9090`
 
 ### Network Issues
 
 ```bash
 # Check iptables rules
-docker-compose exec antigravity-clash iptables -t nat -L -n
+docker-compose exec clash iptables -t nat -L -n
 
 # Check routing
-docker-compose exec antigravity-clash ip route
+docker-compose exec clash ip route
 
 # Test network connection
-docker-compose exec antigravity-clash ping -c 4 8.8.8.8
+docker-compose exec clash ping -c 4 8.8.8.8
 ```
 
 ### Proxy Connection Failed
@@ -362,7 +397,9 @@ docker-compose exec antigravity-clash ping -c 4 8.8.8.8
 curl -x http://localhost:7890 https://www.google.com
 ```
 
-## How Tun Mode Works
+## How It Works
+
+### Tun Mode Principle
 
 1. **Tun Device**: Creates a virtual network interface (tun0)
 2. **Traffic Hijacking**: Redirects all traffic to Tun device via iptables rules
@@ -374,6 +411,10 @@ curl -x http://localhost:7890 https://www.google.com
 1. **Auto Update**: Clash periodically fetches node list from subscription URL
 2. **Health Check**: Periodically tests node availability
 3. **Auto Select**: Automatically selects optimal node based on latency
+
+### mihomo Principle
+
+mihomo is a React-based Clash Web UI that manages proxy configuration and status through Clash RESTful API.
 
 ### Traffic Flow
 
@@ -403,19 +444,19 @@ Application → Tun Device → Clash → Subscription Node → Target Server
 
 ### Custom Rules
 
-Edit `config/clash/config.yaml`'s `rules` section:
+Edit [`config/clash/config.yaml`](config/clash/config.yaml)'s `rules` section:
 
 ```yaml
 rules:
   # Direct connection to mainland China IP
   - GEOIP,CN,DIRECT
-  
+
   # Direct connection to LAN
   - IP-CIDR,192.168.0.0/16,DIRECT
-  
+
   # Specific domain via proxy
   - DOMAIN-SUFFIX,google.com,PROXY
-  
+
   # Other traffic via proxy
   - MATCH,PROXY
 ```
@@ -429,7 +470,7 @@ proxy-providers:
     url: "https://subscription1-url.com"
     interval: 3600
     path: ./providers/subscription1.yaml
-    
+
   subscription2:
     type: http
     url: "https://subscription2-url.com"
@@ -458,7 +499,7 @@ A: Tun mode only supports Linux. On Windows, you can use WSL2 or use normal prox
 
 ### Q: How to view proxy traffic?
 
-A: Access Clash control panel at http://localhost:9090 to view real-time connections and traffic statistics.
+A: Access mihomo Web UI at http://localhost:8080 to view real-time connections and traffic statistics.
 
 ### Q: Will data be lost after container restart?
 
@@ -466,7 +507,11 @@ A: No. Configuration and data directories are mounted to the host, restarting th
 
 ### Q: How often are subscription nodes updated?
 
-A: Default is every hour (3600 seconds), you can adjust the `interval` parameter in `config/clash/config.yaml`.
+A: Default is every hour (3600 seconds), you can adjust the `interval` parameter in [`config/clash/config.yaml`](config/clash/config.yaml:24).
+
+### Q: What's the difference between mihomo and Clash control panel?
+
+A: mihomo is a more user-friendly Web UI providing visual proxy management interface. Clash control panel is the official RESTful API port, and mihomo communicates with Clash through this port.
 
 ## License
 
