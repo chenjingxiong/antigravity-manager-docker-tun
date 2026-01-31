@@ -1,10 +1,10 @@
-# Antigravity-Manager + Clash + mihomo
+# Antigravity-Manager + Clash + metacubexd
 
-本项目使用 Docker Compose 部署 Antigravity-Manager、Clash 代理和 mihomo Web UI，支持订阅节点功能。
+本项目使用 Docker Compose 部署 Antigravity-Manager、Clash 代理和 metacubexd（Mihomo Dashboard），支持订阅节点功能。
 
 ## 项目简介
 
-Antigravity-Manager 是一个专业的 AI 账号管理与协议反代系统。本项目使用官方 Docker 镜像部署，集成 Clash 代理（支持 TUN 模式和订阅节点），并使用 mihomo 作为 Web 管理界面。
+Antigravity-Manager 是一个专业的 AI 账号管理与协议反代系统。本项目使用官方 Docker 镜像部署，集成 Clash 代理（支持 TUN 模式和订阅节点），并使用 metacubexd 作为 Web 管理界面。
 
 ## 项目结构
 
@@ -26,7 +26,7 @@ Antigravity-Manager 是一个专业的 AI 账号管理与协议反代系统。�
 - ✅ 使用 Antigravity-Manager 官方镜像 `lbjlaq/antigravity-manager:latest`
 - ✅ 集成 Clash 代理（支持 TUN 模式）
 - ✅ 订阅节点支持（自动更新节点列表）
-- ✅ mihomo Web UI（acd）可视化管理
+- ✅ metacubexd（Mihomo Dashboard）可视化管理
 - ✅ Tun 模式透明代理
 - ✅ 自动路由配置
 - ✅ DNS 劫持
@@ -182,27 +182,28 @@ Antigravity-Manager 使用环境变量进行配置：
 | 8045 | Antigravity-Manager | 管理界面和 API Base |
 | 7890 | Clash HTTP 代理 | Clash HTTP 代理端口 |
 | 7891 | Clash SOCKS5 代理 | Clash SOCKS5 代理端口 |
-| 9090 | Clash 控制面板 | Clash RESTful API 端口 |
-| 8080 | mihomo Web UI | mihomo Web 管理界面 |
+| 9090 | Clash RESTful API | Clash RESTful API 端口 |
+| 8080 | metacubexd | metacubexd Web 管理界面 |
 
 ## 访问服务
 
 启动服务后，可以通过以下地址访问：
 
 - **Antigravity-Manager**: http://localhost:8045
-- **mihomo Web UI**: http://localhost:8080
-- **Clash 控制面板**: http://localhost:9090 (通过 mihomo 访问)
+- **metacubexd**: http://localhost:8080
+- **Clash RESTful API**: http://localhost:9090 (metacubexd 通过此端口与 Clash 通信）
 
-### 使用 mihomo 配置代理
+### 使用 metacubexd 配置代理
 
 1. 访问 http://localhost:8080
-2. 点击"连接"按钮，连接到 Clash（默认地址：`http://clash:9090`）
-3. 在 mihomo 中可以：
+2. metacubexd 会自动连接到 Clash（默认地址：`http://clash:9090`）
+3. 在 metacubexd 中可以：
    - 查看订阅节点
    - 测试节点延迟
    - 切换代理节点
    - 查看流量统计
    - 管理代理规则
+   - 查看实时日志
 
 ## 常用命令
 
@@ -274,7 +275,7 @@ curl -x http://localhost:7890 https://www.google.com
 
 浏览器打开: http://localhost:8045
 
-### 4. 访问 mihomo Web UI
+### 4. 访问 metacubexd
 
 浏览器打开: http://localhost:8080
 
@@ -376,11 +377,11 @@ curl -I https://your-subscription-url.com
 docker-compose logs -f clash | grep subscription
 ```
 
-### mihomo 无法连接 Clash
+### metacubexd 无法连接 Clash
 
 1. 检查 Clash 容器是否正常运行：`docker-compose ps`
-2. 检查 Clash 控制面板端口是否开放：`docker-compose logs clash`
-3. 在 mihomo 中确认 Clash 地址：`http://clash:9090`
+2. 检查 Clash RESTful API 端口是否开放：`docker-compose logs clash`
+3. 在 metacubexd 中确认 Clash 地址：`http://clash:9090`
 
 ### 网络问题
 
@@ -421,9 +422,9 @@ curl -x http://localhost:7890 https://www.google.com
 2. **健康检查**: 定期测试节点可用性
 3. **自动选择**: 根据延迟自动选择最优节点
 
-### mihomo 原理
+### metacubexd 原理
 
-mihomo 是一个基于 React 的 Clash Web UI，通过 Clash RESTful API 管理代理配置和状态。
+metacubexd 是 Mihomo Dashboard 的官方实现，通过 Clash RESTful API 管理代理配置和状态，提供美观的 Web 界面。
 
 ### 流量流程
 
@@ -508,7 +509,7 @@ A: Tun 模式仅支持 Linux。在 Windows 上可以使用 WSL2 或使用普通�
 
 ### Q: 如何查看代理流量？
 
-A: 访问 mihomo Web UI http://localhost:8080，可以查看实时连接和流量统计。
+A: 访问 metacubexd http://localhost:8080，可以查看实时连接和流量统计。
 
 ### Q: 容器重启后数据会丢失吗？
 
@@ -518,9 +519,9 @@ A: 不会。配置和数据目录已挂载到宿主机，重启容器不会丢�
 
 A: 默认每小时更新一次（3600 秒），可以在 [`config/clash/config.yaml`](config/clash/config.yaml:24) 中调整 `interval` 参数。
 
-### Q: mihomo 和 Clash 控制面板有什么区别？
+### Q: metacubexd 和 mihomo 有什么区别？
 
-A: mihomo 是一个更友好的 Web UI，提供可视化的代理管理界面。Clash 控制面板是官方的 RESTful API 端口，mihomo 通过该端口与 Clash 通信。
+A: metacubexd 是 Mihomo Dashboard 的官方实现，提供相同的功能和界面，但由官方维护和更新。
 
 ## 许可证
 

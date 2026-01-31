@@ -17,7 +17,21 @@ services:
     networks:
       - antigravity-net
 
-  # Clash 服务
+  # metacubexd - Mihomo Dashboard (Clash Web UI)
+  metacubexd:
+    container_name: metacubexd
+    image: ghcr.io/metacubex/metacubexd
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      - DEFAULT_BACKEND_URL=http://clash:9090
+    depends_on:
+      - clash
+    networks:
+      - antigravity-net
+
+  # Clash 服务（用于 metacubexd 后端）
   clash:
     image: dreamacro/clash:latest
     container_name: clash
@@ -38,25 +52,9 @@ services:
       - "7890:7890"
       # Clash SOCKS5 代理端口
       - "7891:7891"
-      # Clash 控制面板端口
+      # Clash RESTful API 端口（metacubexd 需要）
       - "9090:9090"
     restart: unless-stopped
-    networks:
-      - antigravity-net
-
-  # mihomo (acd) - Clash Web UI
-  mihomo:
-    image: ghcr.io/mihomo/amd64:latest
-    container_name: mihomo
-    ports:
-      - "8080:80"
-    volumes:
-      - ./config/clash:/root/.config/clash:ro
-    environment:
-      - CLASH_URL=http://clash:9090
-    restart: unless-stopped
-    depends_on:
-      - clash
     networks:
       - antigravity-net
 

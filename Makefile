@@ -11,7 +11,7 @@ BLUE   := \033[0;34m
 NC     := \033[0m # No Color
 
 help: ## 显示帮助信息
-	@echo "$(BLUE)Antigravity-Manager + Clash + mihomo$(NC)"
+	@echo "$(BLUE)Antigravity-Manager + Clash + metacubexd$(NC)"
 	@echo ""
 	@echo "$(GREEN)可用命令:$(NC)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-15s$(NC) %s\n", $$1, $$2}'
@@ -24,8 +24,7 @@ up: ## 启动所有服务（后台运行）
 	@echo ""
 	@echo "$(BLUE)访问服务:$(NC)"
 	@echo "  - Antigravity-Manager: http://localhost:8045"
-	@echo "  - mihomo Web UI: http://localhost:8080"
-	@echo "  - Clash 控制面板: http://localhost:9090"
+	@echo "  - metacubexd: http://localhost:8080"
 
 down: ## 停止并删除所有容器
 	@echo "$(BLUE)停止并删除所有容器...$(NC)"
@@ -46,8 +45,8 @@ logs-antigravity: ## 查看 Antigravity-Manager 日志
 logs-clash: ## 查看 Clash 日志
 	docker-compose logs -f clash
 
-logs-mihomo: ## 查看 mihomo 日志
-	docker-compose logs -f mihomo
+logs-metacubexd: ## 查看 metacubexd 日志
+	docker-compose logs -f metacubexd
 
 ps: ## 查看容器状态
 	docker-compose ps
@@ -58,8 +57,8 @@ shell-antigravity: ## 进入 Antigravity-Manager 容器 Shell
 shell-clash: ## 进入 Clash 容器 Shell
 	docker-compose exec clash bash
 
-shell-mihomo: ## 进入 mihomo 容器 Shell
-	docker-compose exec mihomo sh
+shell-metacubexd: ## 进入 metacubexd 容器 Shell
+	docker-compose exec metacubexd sh
 
 clean: ## 清理容器、镜像和数据
 	@echo "$(YELLOW)警告: 这将删除所有容器、镜像和数据！$(NC)"
@@ -83,8 +82,8 @@ status: ## 查看服务状态
 	@echo ""
 	@echo "$(BLUE)服务健康检查:$(NC)"
 	@curl -f http://localhost:8045/api/health && echo "$(GREEN)✓ Antigravity-Manager 服务正常$(NC)" || echo "$(RED)✗ Antigravity-Manager 服务异常$(NC)"
-	@curl -f http://localhost:8080 && echo "$(GREEN)✓ mihomo Web UI 正常$(NC)" || echo "$(RED)✗ mihomo Web UI 异常$(NC)"
-	@curl -f http://localhost:9090 && echo "$(GREEN)✓ Clash 控制面板正常$(NC)" || echo "$(RED)✗ Clash 控制面板异常$(NC)"
+	@curl -f http://localhost:8080 && echo "$(GREEN)✓ metacubexd 正常$(NC)" || echo "$(RED)✗ metacubexd 异常$(NC)"
+	@curl -f http://localhost:9090 && echo "$(GREEN)✓ Clash RESTful API 正常$(NC)" || echo "$(RED)✗ Clash RESTful API 异常$(NC)"
 
 check: ## 检查配置文件
 	@echo "$(BLUE)检查配置文件...$(NC)"

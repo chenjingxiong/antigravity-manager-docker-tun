@@ -1,10 +1,10 @@
-# Antigravity-Manager + Clash + mihomo
+# Antigravity-Manager + Clash + metacubexd
 
-This project deploys Antigravity-Manager, Clash proxy, and mihomo Web UI using Docker Compose, with subscription node support.
+This project deploys Antigravity-Manager, Clash proxy, and metacubexd (Mihomo Dashboard) using Docker Compose, with subscription node support.
 
 ## Project Overview
 
-Antigravity-Manager is a professional AI account management and protocol reverse proxy system. This project uses the official Docker image, integrates Clash proxy (with TUN mode and subscription support), and uses mihomo as the Web management interface.
+Antigravity-Manager is a professional AI account management and protocol reverse proxy system. This project uses official Docker images, integrates Clash proxy (with TUN mode and subscription support), and uses metacubexd as a Web management interface.
 
 ## Project Structure
 
@@ -26,7 +26,7 @@ Antigravity-Manager is a professional AI account management and protocol reverse
 - ✅ Uses Antigravity-Manager official image `lbjlaq/antigravity-manager:latest`
 - ✅ Integrated Clash proxy (with TUN mode support)
 - ✅ Subscription node support (automatic node list updates)
-- ✅ mihomo Web UI (acd) for visual management
+- ✅ metacubexd (Mihomo Dashboard) for visual management
 - ✅ Tun mode transparent proxy
 - ✅ Auto route configuration
 - ✅ DNS hijacking
@@ -67,7 +67,7 @@ Antigravity-Manager is a professional AI account management and protocol reverse
 
 ## Quick Start
 
-### 1. Clone the Project
+### 1. Clone Project
 
 ```bash
 git clone <repository-url>
@@ -76,7 +76,7 @@ cd Antigravity-Manager-Docker-Tun
 
 ### 2. Configure Clash Subscription URL
 
-Edit [`config/clash/config.yaml`](config/clash/config.yaml) file, modify the subscription URL:
+Edit [`config/clash/config.yaml`](config/clash/config.yaml) file, modify subscription URL:
 
 ```yaml
 proxy-providers:
@@ -173,27 +173,28 @@ Antigravity-Manager uses environment variables for configuration:
 | 8045 | Antigravity-Manager | Management UI and API Base |
 | 7890 | Clash HTTP Proxy | Clash HTTP proxy port |
 | 7891 | Clash SOCKS5 Proxy | Clash SOCKS5 proxy port |
-| 9090 | Clash Control Panel | Clash RESTful API port |
-| 8080 | mihomo Web UI | mihomo Web management interface |
+| 9090 | Clash RESTful API | Clash RESTful API port |
+| 8080 | metacubexd | metacubexd Web management interface |
 
 ## Access Services
 
 After starting services, you can access:
 
 - **Antigravity-Manager**: http://localhost:8045
-- **mihomo Web UI**: http://localhost:8080
-- **Clash Control Panel**: http://localhost:9090 (accessed via mihomo)
+- **metacubexd**: http://localhost:8080
+- **Clash RESTful API**: http://localhost:9090 (metacubexd communicates with Clash through this port)
 
-### Using mihomo to Configure Proxy
+### Using metacubexd to Configure Proxy
 
 1. Visit http://localhost:8080
-2. Click "Connect" button to connect to Clash (default address: `http://clash:9090`)
-3. In mihomo, you can:
+2. metacubexd will automatically connect to Clash (default address: `http://clash:9090`)
+3. In metacubexd, you can:
    - View subscription nodes
    - Test node latency
    - Switch proxy nodes
    - View traffic statistics
    - Manage proxy rules
+   - View real-time logs
 
 ## Common Commands
 
@@ -265,7 +266,7 @@ curl -x http://localhost:7890 https://www.google.com
 
 Browser open: http://localhost:8045
 
-### 4. Access mihomo Web UI
+### 4. Access metacubexd
 
 Browser open: http://localhost:8080
 
@@ -367,11 +368,11 @@ curl -I https://your-subscription-url.com
 docker-compose logs -f clash | grep subscription
 ```
 
-### mihomo Cannot Connect to Clash
+### metacubexd Cannot Connect to Clash
 
 1. Check if Clash container is running: `docker-compose ps`
-2. Check if Clash control panel port is open: `docker-compose logs clash`
-3. Confirm Clash address in mihomo: `http://clash:9090`
+2. Check if Clash RESTful API port is open: `docker-compose logs clash`
+3. Confirm Clash address in metacubexd: `http://clash:9090`
 
 ### Network Issues
 
@@ -412,9 +413,9 @@ curl -x http://localhost:7890 https://www.google.com
 2. **Health Check**: Periodically tests node availability
 3. **Auto Select**: Automatically selects optimal node based on latency
 
-### mihomo Principle
+### metacubexd Principle
 
-mihomo is a React-based Clash Web UI that manages proxy configuration and status through Clash RESTful API.
+metacubexd is the official implementation of Mihomo Dashboard, managing proxy configuration and status through Clash RESTful API with a beautiful web interface.
 
 ### Traffic Flow
 
@@ -499,19 +500,19 @@ A: Tun mode only supports Linux. On Windows, you can use WSL2 or use normal prox
 
 ### Q: How to view proxy traffic?
 
-A: Access mihomo Web UI at http://localhost:8080 to view real-time connections and traffic statistics.
+A: Access metacubexd at http://localhost:8080 to view real-time connections and traffic statistics.
 
 ### Q: Will data be lost after container restart?
 
-A: No. Configuration and data directories are mounted to the host, restarting the container will not lose data.
+A: No. Configuration and data directories are mounted to host, restarting the container will not lose data.
 
 ### Q: How often are subscription nodes updated?
 
-A: Default is every hour (3600 seconds), you can adjust the `interval` parameter in [`config/clash/config.yaml`](config/clash/config.yaml:24).
+A: Default is every hour (3600 seconds), you can adjust to `interval` parameter in [`config/clash/config.yaml`](config/clash/config.yaml:24).
 
-### Q: What's the difference between mihomo and Clash control panel?
+### Q: What's the difference between metacubexd and mihomo?
 
-A: mihomo is a more user-friendly Web UI providing visual proxy management interface. Clash control panel is the official RESTful API port, and mihomo communicates with Clash through this port.
+A: metacubexd is the official implementation of Mihomo Dashboard, providing the same features and interface, but maintained and updated by the official team.
 
 ## License
 
